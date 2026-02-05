@@ -1,0 +1,15 @@
+/* Minimal styles for Movies Explorer */
+body{font-family:Segoe UI,Roboto,Arial,sans-serif;margin:18px;color:#222}
+header h1{margin:0 0 6px 0}
+.lead{margin:0 0 14px 0;color:#555}
+#controls{display:flex;gap:12px;align-items:center;margin:12px 0 18px 0}
+label{font-size:14px}
+select,input{padding:6px;border:1px solid #ccc;border-radius:4px}
+button{padding:7px 12px;border:none;background:#007bff;color:#fff;border-radius:4px;cursor:pointer}
+button:hover{background:#0056c8}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{padding:8px 10px;border:1px solid #e6e6e6;text-align:left}
+thead th{background:#f5f7fa}
+tr:nth-child(even){background:#fbfcfe}
+.error{color:#a00}
+footer{margin-top:12px;color:#666;font-size:13px}

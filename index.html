@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Movies Explorer</title>
+  <link rel="stylesheet" href="styles.css">
+  <meta name="description" content="Simple static frontend to browse IMDB movie data">
+</head>
+<body>
+  <header>
+    <h1>Movies Explorer</h1>
+    <p class="lead">Filter and view top movies from the CSV (no install — ready for GitHub Pages).</p>
+  </header>
+
+  <section id="controls">
+    <label>Genre
+      <select id="genre"><option>All</option></select>
+    </label>
+    <label>Year
+      <select id="year"><option>All</option></select>
+    </label>
+    <label>Top
+      <input id="topn" type="number" value="10" min="1" max="100">
+    </label>
+    <button id="apply">Show</button>
+  </section>
+
+  <main>
+    <table id="movies">
+      <thead>
+        <tr><th>Rank</th><th>Title</th><th>Genre</th><th>Year</th><th>Rating</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+
+  <footer>
+    <small>Place IMDB-Movie-Data.csv in the repository root. Works on GitHub Pages.</small>
+  </footer>
+
+  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    fetch('IMDB-Movie-Data.csv')
+      .then(r => r.text())
+      .then(csv => {
+        const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
+        const movies = parsed.map(m => ({
+          Rank: m.Rank || '',
+          Title: m.Title || '',
+          Genre: m.Genre || '',
+          Year: m.Year || '',
+          Rating: m.Rating || ''
+        }));
+
+        const genreSel = document.getElementById('genre');
+        const yearSel = document.getElementById('year');
+        const genres = new Set(['All']);
+        const years = new Set(['All']);
+        movies.forEach(m => {
+          if (m.Genre) m.Genre.split(',').map(s => s.trim()).forEach(g => genres.add(g));
+          if (m.Year) years.add(m.Year);
+        });
+        Array.from(genres).sort().forEach(g => { const o = document.createElement('option'); o.value = o.textContent = g; genreSel.appendChild(o); });
+        Array.from(years).sort().forEach(y => { const o = document.createElement('option'); o.value = o.textContent = y; yearSel.appendChild(o); });
+
+        function render() {
+          const g = genreSel.value;
+          const y = yearSel.value;
+          const topn = Number(document.getElementById('topn').value) || 10;
+          let list = movies.filter(m => (g === 'All' || (m.Genre && m.Genre.split(',').map(s => s.trim()).includes(g))) && (y === 'All' || m.Year == y));
+          list = list.sort((a, b) => parseFloat(b.Rating || 0) - parseFloat(a.Rating || 0)).slice(0, topn);
+          const tbody = document.querySelector('#movies tbody'); tbody.innerHTML = '';
+          list.forEach(m => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${m.Rank}</td><td>${m.Title}</td><td>${m.Genre}</td><td>${m.Year}</td><td>${m.Rating}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+
+        document.getElementById('apply').addEventListener('click', render);
+        render();
+      })
+      .catch(err => {
+        document.querySelector('main').innerHTML = '<p class="error">Unable to load IMDB-Movie-Data.csv — make sure the file exists in the repo root.</p>';
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movie Review Analyzer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js">    // Load CSV data
+    let movies = [];
+
+    fetch('movies.csv')
+      .then(response => response.text())
+      .then(data => {
+        const rows = data.split('\n').slice(1);
+        rows.forEach(row => {
+          const cols = row.split(',');
+          movies.push({
+            name: cols[0],
+            genre: cols[1],
+            rating: cols[2]
+          });
+        });
+      });
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const input = document.getElementById('movieInput').value.toLowerCase();
+      const result = movies.find(m => m.name.toLowerCase() === input);
+
+      const output = document.getElementById('movieResult');
+      if (result) {
+        output.innerHTML = `🎬 <b>${result.name}</b><br>Genre: ${result.genre}<br>Rating: ⭐ ${result.rating}`;
+      } else {
+        output.innerHTML = '❌ Movie not found in dataset';
+      }
+    });
+
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #0f172a;
+      color: #f8fafc;
+    }
+    header {
+      padding: 20px;
+      text-align: center;
+      background: #020617;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .container {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: #020617;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+    .card h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: #020617;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎬 Movie Review Analyzer Dashboard</h1>
+    <p>Interactive analysis of movie ratings and genres</p>
+  </header>
+
+  <div class="container">
+
+    <div class="card">
+      <h2>Search Movie Rating</h2>
+      <input type="text" id="movieInput" placeholder="Enter movie name" style="width:100%;padding:10px;border-radius:8px;border:none;margin-bottom:10px;" />
+      <button id="searchBtn" style="width:100%;padding:10px;border-radius:8px;border:none;font-size:14px;cursor:pointer;">Search</button>
+      <p id="movieResult" style="margin-top:15px;text-align:center;font-size:15px;"></p>
+    </div>
+
+    <div class="card">
+      <h2>Average Rating by Genre</h2>
+      <canvas id="genreChart"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>Sentiment Distribution</h2>
+      <canvas id="sentimentChart"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>Top Rated Movies</h2>
+      <select id="yearFilter">
+        <option value="all">All Years</option>
+        <option value="2022">2022</option>
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+      </select>
+      <canvas id="topMoviesChart"></canvas>
+    </div>
+
+  </div>
+
+  <footer>
+    Built with ❤️ using HTML, CSS, JavaScript & Chart.js
+  </footer>
+
+  <script>
+    // Genre Rating Chart
+    new Chart(document.getElementById('genreChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Action', 'Drama', 'Comedy', 'Thriller', 'Romance'],
+        datasets: [{
+          label: 'Avg Rating',
+          data: [7.8, 8.2, 7.5, 8.0, 7.6]
+        }]
+      }
+    });
+
+    // Sentiment Chart
+    new Chart(document.getElementById('sentimentChart'), {
+      type: 'pie',
+      data: {
+        labels: ['Positive', 'Neutral', 'Negative'],
+        datasets: [{
+          data: [65, 20, 15]
+        }]
+      }
+    });
+
+    // Top Movies Chart
+    const topMoviesChart = new Chart(document.getElementById('topMoviesChart'), {
+      type: 'line',
+      data: {
+        labels: ['Movie A', 'Movie B', 'Movie C', 'Movie D'],
+        datasets: [{
+          label: 'Rating',
+          data: [8.9, 8.7, 8.5, 8.4]
+        }]
+      }
+    });
+
+    document.getElementById('yearFilter').addEventListener('change', function () {
+      alert('Filter logic can be connected to backend or dataset');
+    });
+  </script>
+
+</body>
+</html>
